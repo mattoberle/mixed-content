@@ -40,7 +40,15 @@ def parse_sitemap(url):
 
 
 def check_for_mixed_content(urls, cache_file='.mixedcontent', clear=False):
-    driver = webdriver.Chrome()
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+
+    driver = webdriver.Chrome(options=options)
+    driver.implicitly_wait(10)
+
     with cache(cache_file, clear) as c:
         for i, url in enumerate(urls):
             if url in c.checked:
