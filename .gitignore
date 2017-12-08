@@ -1,0 +1,17 @@
+*.egg-info
+*.env
+*.gz
+*.log
+*.pyc
+*.swn
+*.swo
+*.swp
+.cache/
+.coverage
+.eggs/
+.idea
+.mixedcontent
+.tox/
+__pycache__
+build/
+dist/
