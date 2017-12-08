@@ -8,6 +8,7 @@ setup(
     description='Mixed-Content Crawler',
     install_requires=[
         'beautifulsoup4',
+        'celery[redis]',
         'lxml',
         'requests',
         'selenium',
@@ -19,6 +20,7 @@ setup(
     ],
     scripts=[
         'scripts/mixedcontent',
+        'scripts/mixedcontent-distributed',
     ],
     url='https://github.com/mattoberle/mixed-content',
     version='pre',

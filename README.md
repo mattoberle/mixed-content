@@ -1,16 +1,10 @@
 # Mixed Content Report
 
+
 ## Overview
 
 This tool utilizes the Chrome webdriver, BeautifulSoup, and Selenium to
 crawl a sitemap and verify that pages do not throw Mixed Content warnings.
-
-The code is currently an early prototype. Execution requires a a copy of the
-Chrome webdriver on the user's PATH and is currently single-threaded. Caching
-is performed via a single Python pickle.
-
-Eventually this project will run in Docker and enable parallel execution via
-compose.
 
 
 ## Installation
@@ -20,15 +14,18 @@ pip install git+https://github.com/mattoberle/mixed-content.git
 ```
 
 
-## Usage
+## Executing via Docker
 
+Create a `sitemap.cfg` file in the repository root, placing each URL on a
+new line.
 ```
-usage: mixedcontent [-h] --sitemaps SITEMAPS [SITEMAPS ...]
-                    [--cache-file CACHE_FILE] [--clear-cache]
+https://www.example.com/sitemap.xml
+https://...
+```
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --sitemaps SITEMAPS [SITEMAPS ...]
-  --cache-file CACHE_FILE
-  --clear-cache
+Execute the process with the number of desired workers.
+```sh
+docker-compose up --scale worker=7
 ```
+
+Results will be saved to `results/results.txt`.

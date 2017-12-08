@@ -1,3 +1,4 @@
+*.cfg
 *.egg-info
 *.env
 *.gz
