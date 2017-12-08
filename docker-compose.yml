@@ -20,7 +20,7 @@ services:
 
   scheduler:
     build: .
-    command: ['mixedcontent-distributed']
+    command: ['mixedcontent']
     depends_on:
       - worker
       - redis

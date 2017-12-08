@@ -2,7 +2,8 @@ import socket
 import time
 from subprocess import Popen
 
-from celery import Celery, group
+from celery import Celery
+from celery.result import ResultSet
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -36,13 +37,12 @@ driver = start_selenium_server()
 
 @app.task(trail=True)
 def collect_urls(sitemaps):
-    return group(call_check_for_mixed_content.s(url) for sitemap in sitemaps
-                 for url in parse_sitemap(sitemap))()
-
-
-@app.task(trail=True)
-def call_check_for_mixed_content(url):
-    return check_for_mixed_content.delay(url)
+    results = ResultSet([])
+    for sitemap in sitemaps:
+        urls = parse_sitemap(sitemap)
+        for url in urls:
+            results.add(check_for_mixed_content.delay(url))
+    return results
 
 
 @app.task(trail=True)
@@ -52,8 +52,8 @@ def check_for_mixed_content(url):
     except TimeoutException:
         return ('timeout', url)
     log = driver.get_log('browser')
-    msgs = (d['message'] for d in log if d['level'] == 'SEVERE')
-    if any('Mixed Content' in msg for msg in msgs):
-        return ('error', url)
+    for msg in log:
+        if 'MixedContent' in msg['message']:
+            return ('error', url)
     else:
         return ('good', url)

@@ -20,7 +20,6 @@ setup(
     ],
     scripts=[
         'scripts/mixedcontent',
-        'scripts/mixedcontent-distributed',
     ],
     url='https://github.com/mattoberle/mixed-content',
     version='pre',

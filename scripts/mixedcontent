@@ -1,30 +1,32 @@
 #!/usr/bin/env python3
 
-import argparse
+import socket
+import time
+from subprocess import Popen
 
-from mixedcontent.sitemap import check_for_mixed_content, parse_sitemap
-
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--sitemaps', nargs='+', required=True)
-    parser.add_argument('--cache-file', default='.mixedcontent')
-    parser.add_argument('--clear-cache', action='store_true')
-    args = parser.parse_args()
-    return args
+from mixedcontent.distributed import collect_urls
 
 
-def get_all_urls(sitemaps):
-    for sitemap in sitemaps:
-        urls = parse_sitemap(sitemap)
-        for url in urls:
-            yield url
+def start_selenium_server():
+    Popen(['/opt/bin/entry_point.sh'])
+    started = False
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    start_time = time.time()
+    started = False
+    while not started:
+        started = sock.connect_ex(('127.0.0.1', 4444)) == 0
+        if time.time() - start_time > 10:
+            raise IOError('Could not connect to Selenium server.')
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    urls = get_all_urls(args.sitemaps)
-    errors = check_for_mixed_content(urls, cache_file=args.cache_file,
-                                     clear=args.clear_cache)
-    for error in errors:
-        print(error)
+    sitemaps = set()
+    with open('sitemaps.cfg', 'r') as f:
+        for line in f:
+            sitemaps.add(line.strip())
+    results = collect_urls(list(sitemaps))
+    with open('results/results.txt', 'w') as f:
+        for result in results.join():
+            status, url = result
+            f.write('{},{}\n'.format(status, url))
