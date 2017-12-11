@@ -16,11 +16,11 @@ pip install git+https://github.com/mattoberle/mixed-content.git
 
 ## Executing via Docker
 
-Create a `sitemap.cfg` file in the repository root, placing each URL on a
+Create a `domains.cfg` file in the repository root, placing each URL on a
 new line.
 ```
-https://www.example.com/sitemap.xml
-https://...
+www.example.com
+www...
 ```
 
 Execute the process with the number of desired workers.

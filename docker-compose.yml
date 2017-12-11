@@ -2,33 +2,40 @@ version: '3'
 
 services:
 
-  worker:
-    build: .
-    command: ['celery', '-A', 'mixedcontent.distributed', 'worker']
-    depends_on:
-      - redis
-    links:
-      - redis
-    volumes:
-      - ./mixedcontent:/home/seluser/mixedcontent
-      - ./scripts:/home/seluser/scripts
-      - ./setup.py:/home/seluser/setup.py
-      - ./sitemaps.cfg:/home/seluser/sitemaps.cfg
+  broker:
+    image: redis
 
-  redis:
+  results:
     image: redis
 
   scheduler:
     build: .
     command: ['mixedcontent']
     depends_on:
+      - broker
+      - results
       - worker
-      - redis
     links:
-      - redis
+      - broker
+      - results
     volumes:
       - ./mixedcontent:/home/seluser/mixedcontent
       - ./scripts:/home/seluser/scripts
       - ./setup.py:/home/seluser/setup.py
-      - ./sitemaps.cfg:/home/seluser/sitemaps.cfg
+      - ./domains.cfg:/home/seluser/domains.cfg
       - ./results:/home/seluser/results
+
+  worker:
+    build: .
+    command: ['celery', '-A', 'mixedcontent.distributed', 'worker', '-l', 'INFO']
+    depends_on:
+      - broker
+      - results
+    links:
+      - broker
+      - results
+    volumes:
+      - ./mixedcontent:/home/seluser/mixedcontent
+      - ./scripts:/home/seluser/scripts
+      - ./setup.py:/home/seluser/setup.py
+      - ./domains.cfg:/home/seluser/domains.cfg

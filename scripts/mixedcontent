@@ -4,7 +4,7 @@ import socket
 import time
 from subprocess import Popen
 
-from mixedcontent.distributed import collect_urls
+from mixedcontent.distributed import parse_sitemap, report
 
 
 def start_selenium_server():
@@ -21,12 +21,12 @@ def start_selenium_server():
 
 
 if __name__ == '__main__':
-    sitemaps = set()
-    with open('sitemaps.cfg', 'r') as f:
+    domains = set()
+    with open('domains.cfg', 'r') as f:
         for line in f:
-            sitemaps.add(line.strip())
-    results = collect_urls(list(sitemaps))
-    with open('results/results.txt', 'w') as f:
-        for result in results.join():
-            status, url = result
-            f.write('{},{}\n'.format(status, url))
+            domains.add(line.strip())
+
+    for domain in domains:
+        url = 'https://{}/sitemap.xml'.format(domain)
+        parse_sitemap.delay(domain, url)
+    report()

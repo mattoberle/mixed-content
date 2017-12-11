@@ -1,14 +1,15 @@
 import socket
 import time
+from datetime import datetime
 from subprocess import Popen
 
+import redis
+import requests
+from bs4 import BeautifulSoup
 from celery import Celery
-from celery.result import ResultSet
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
-from mixedcontent.sitemap import parse_sitemap
 
 
 def start_selenium_server():
@@ -31,18 +32,29 @@ def start_selenium_server():
     return driver
 
 
-app = Celery('tasks', backend='redis://redis', broker='redis://redis')
+app = Celery('tasks', broker='redis://broker')
 driver = start_selenium_server()
+redis_client = redis.StrictRedis(host='results', db=1, decode_responses=True)
 
 
 @app.task(trail=True)
-def collect_urls(sitemaps):
-    results = ResultSet([])
-    for sitemap in sitemaps:
-        urls = parse_sitemap(sitemap)
-        for url in urls:
-            results.add(check_for_mixed_content.delay(url))
-    return results
+def parse_sitemap(domain, url):
+    resp = requests.get(url)
+    if resp.status_code == 503:
+        parse_sitemap.apply_async(args=[domain, url], countdown=5)
+    resp.raise_for_status()
+
+    soup = BeautifulSoup(resp.content, 'lxml')
+    urls = (tag.text.strip() for tag in soup.findAll('loc'))
+
+    for url in urls:
+        if url.endswith('.xml'):
+            parse_sitemap.delay(domain, url)
+        elif domain in url:
+            check_for_mixed_content.delay(url)
+        else:
+            continue  # URLs not on the original domain should not be called.
+    return
 
 
 @app.task(trail=True)
@@ -50,10 +62,25 @@ def check_for_mixed_content(url):
     try:
         driver.get(url)
     except TimeoutException:
-        return ('timeout', url)
+        result = ('timeout', url)
+        redis_client.rpush('results', result)
+        return result
     log = driver.get_log('browser')
     for msg in log:
         if 'MixedContent' in msg['message']:
-            return ('error', url)
+            result = ('error', url)
+            redis_client.rpush('results', result)
+            return result
     else:
-        return ('good', url)
+        result = ('good', url)
+        redis_client.rpush('results', result)
+        return result
+
+
+def report():
+    with open('results/results.txt', 'w') as f:
+        while True:
+            _, result = redis_client.blpop('results')
+            status, url = eval(result)
+            ts = datetime.now().isoformat()
+            f.write('{},{},{}\n'.format(ts, status, url))
