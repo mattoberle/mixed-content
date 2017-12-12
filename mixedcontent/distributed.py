@@ -68,7 +68,7 @@ def check_for_mixed_content(url):
 
     log = driver.get_log('browser')
     for msg in log:
-        if 'MixedContent' in msg['message']:
+        if 'Mixed Content' in msg['message']:
             result = ('error', url)
             redis_client.publish(*result)
             return result
