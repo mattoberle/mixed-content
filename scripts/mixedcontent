@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
 
-import socket
-import time
-from subprocess import Popen
-
-from mixedcontent.distributed import parse_sitemap, report
-
-
-def start_selenium_server():
-    Popen(['/opt/bin/entry_point.sh'])
-    started = False
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    start_time = time.time()
-    started = False
-    while not started:
-        started = sock.connect_ex(('127.0.0.1', 4444)) == 0
-        if time.time() - start_time > 10:
-            raise IOError('Could not connect to Selenium server.')
-
 
 if __name__ == '__main__':
+    from mixedcontent.distributed import parse_sitemap, report
     domains = set()
     with open('domains.cfg', 'r') as f:
         for line in f:

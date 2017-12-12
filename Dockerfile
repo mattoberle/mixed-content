@@ -15,4 +15,5 @@ WORKDIR /home/seluser
 COPY . ./
 RUN pip3 install -e . && chown -R seluser: .
 
+ENV PYTHONUNBUFFERED=1
 USER seluser
