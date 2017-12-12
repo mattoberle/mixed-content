@@ -5,19 +5,14 @@ services:
   broker:
     image: redis
 
-  results:
-    image: redis
-
   scheduler:
     build: .
     command: ['mixedcontent']
     depends_on:
       - broker
-      - results
       - worker
     links:
       - broker
-      - results
     volumes:
       - ./mixedcontent:/home/seluser/mixedcontent
       - ./scripts:/home/seluser/scripts
@@ -30,10 +25,8 @@ services:
     command: ['celery', '-A', 'mixedcontent.distributed', 'worker', '-l', 'INFO']
     depends_on:
       - broker
-      - results
     links:
       - broker
-      - results
     volumes:
       - ./mixedcontent:/home/seluser/mixedcontent
       - ./scripts:/home/seluser/scripts

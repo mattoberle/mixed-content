@@ -11,6 +11,7 @@ circle.yml
 dist
 docker-compose.yml
 README.md
+results/*
 
 **/*.apib
 **/*.egg-info

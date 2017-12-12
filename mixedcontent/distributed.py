@@ -34,7 +34,7 @@ def start_selenium_server():
 
 app = Celery('tasks', broker='redis://broker')
 driver = start_selenium_server()
-redis_client = redis.StrictRedis(host='results', db=1, decode_responses=True)
+redis_client = redis.StrictRedis(host='broker', db=1, decode_responses=True)
 
 
 @app.task(trail=True)
@@ -63,24 +63,36 @@ def check_for_mixed_content(url):
         driver.get(url)
     except TimeoutException:
         result = ('timeout', url)
-        redis_client.rpush('results', result)
+        redis_client.publish(*result)
         return result
+
     log = driver.get_log('browser')
     for msg in log:
         if 'MixedContent' in msg['message']:
             result = ('error', url)
-            redis_client.rpush('results', result)
+            redis_client.publish(*result)
             return result
     else:
         result = ('good', url)
-        redis_client.rpush('results', result)
+        redis_client.publish(*result)
         return result
 
 
 def report():
-    with open('results/results.txt', 'w') as f:
+    """
+    Subscribes to the three result channels (timeout, error, good)
+    and streams results to a file.
+    """
+    pubsub = redis_client.pubsub()
+    pubsub.psubscribe('timeout', 'error', 'good')
+    with open('results/results.txt', 'a') as f:
         while True:
-            _, result = redis_client.blpop('results')
-            status, url = eval(result)
-            ts = datetime.now().isoformat()
-            f.write('{},{},{}\n'.format(ts, status, url))
+            for result in pubsub.listen():
+                if result['type'] == 'psubscribe':
+                    continue
+                ts = datetime.now().isoformat()
+
+                line = '{ts},{channel},{data}\n'.format(ts=ts, **result)
+                f.write(line)
+                f.flush()
+                print(line)
