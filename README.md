@@ -16,11 +16,18 @@ git clone https://github.com/mattoberle/mixed-content
 cd mixed-content
 ```
 
-Create a `domains.cfg` file in the repository root, placing each URL on a
+Create a `domains.cfg` file in the repository root, placing each domain on a
 new line.
 ```
 www.example.com
 www...
+```
+
+Alternatively (or in addition) a `urls.cfg` file can be placed in the
+repository root, placing each URL on a new line.
+```
+https://www.example.com/page-1
+https://www.example.com/page-2
 ```
 
 Execute the process with the number of desired workers.

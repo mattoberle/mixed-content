@@ -2,13 +2,27 @@
 
 
 if __name__ == '__main__':
-    from mixedcontent.distributed import parse_sitemap, report
+    from mixedcontent.distributed import (check_for_mixed_content,
+                                          parse_sitemap, report)
     domains = set()
-    with open('domains.cfg', 'r') as f:
-        for line in f:
-            domains.add(line.strip())
+    try:
+        with open('domains.cfg', 'r') as f:
+            for line in f:
+                domains.add(line.strip())
+    except IOError:
+        pass
+
+    urls = set()
+    try:
+        with open('urls.cfg', 'r') as f:
+            for line in f:
+                urls.add(line.strip())
+    except IOError:
+        pass
 
     for domain in domains:
-        url = 'https://{}/sitemap.xml'.format(domain)
-        parse_sitemap.delay(domain, url)
+        sitemap_url = 'https://{}/sitemap.xml'.format(domain)
+        parse_sitemap.delay(domain, sitemap_url)
+    for url in urls:
+        check_for_mixed_content.delay(url)
     report()
