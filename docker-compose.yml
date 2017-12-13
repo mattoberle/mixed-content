@@ -22,7 +22,7 @@ services:
 
   worker:
     build: .
-    command: ['celery', '-A', 'mixedcontent.distributed', 'worker', '-l', 'ERROR']
+    command: ['celery', '-A', 'mixedcontent.distributed', 'worker', '-l', 'ERROR', '-c', '1']
     depends_on:
       - broker
     links:
