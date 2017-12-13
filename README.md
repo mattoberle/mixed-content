@@ -16,15 +16,15 @@ git clone https://github.com/mattoberle/mixed-content
 cd mixed-content
 ```
 
-Create a `domains.cfg` file in the repository root, placing each domain on a
-new line.
+Create a `data/domains.cfg` file with a list of domains,
+placing each domain on a new line.
 ```
 www.example.com
 www...
 ```
 
-Alternatively (or in addition) a `urls.cfg` file can be placed in the
-repository root, placing each URL on a new line.
+Alternatively (or in addition) a `data/urls.cfg` can be provided,
+placing each URL on a new line.
 ```
 https://www.example.com/page-1
 https://www.example.com/page-2
@@ -35,7 +35,7 @@ Execute the process with the number of desired workers.
 docker-compose up --scale worker=7
 ```
 
-Results will be saved to `results/results.txt`.
+Results will be saved to `data/results.txt`.
 
 
 The number of workers can be modified mid-execution.

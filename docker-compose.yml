@@ -17,8 +17,7 @@ services:
       - ./mixedcontent:/home/seluser/mixedcontent
       - ./scripts:/home/seluser/scripts
       - ./setup.py:/home/seluser/setup.py
-      - ./domains.cfg:/home/seluser/domains.cfg
-      - ./results:/home/seluser/results
+      - ./data:/home/seluser/data
 
   worker:
     build: .
@@ -31,4 +30,4 @@ services:
       - ./mixedcontent:/home/seluser/mixedcontent
       - ./scripts:/home/seluser/scripts
       - ./setup.py:/home/seluser/setup.py
-      - ./domains.cfg:/home/seluser/domains.cfg
+      - ./data:/home/seluser/data

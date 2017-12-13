@@ -109,7 +109,7 @@ def report():
     """
     pubsub = redis_client.pubsub()
     pubsub.psubscribe('timeout', 'error', 'good')
-    with open('results/results.txt', 'a') as f:
+    with open('data/results.txt', 'a') as f:
         while True:
             for result in pubsub.listen():
                 if result['type'] == 'psubscribe':
