@@ -37,7 +37,7 @@ def start_selenium_server(timeout=10):
     return driver
 
 
-app = Celery('tasks', broker='redis://broker')
+app = Celery('tasks', backend='redis://broker', broker='redis://broker')
 driver = start_selenium_server()
 redis_client = redis.StrictRedis(host='broker', db=1, decode_responses=True)
 
