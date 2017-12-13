@@ -12,6 +12,40 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
+class ResultCollectedError(IOError):
+    pass
+
+
+class WebDriver(webdriver.Remote):
+    """
+    Extends the remote webdriver to include support for reading
+    results.txt and skipping checked URLs. This is useful for resuming
+    an interrupted process.
+    """
+    def __init__(self, *args, **kwargs):
+        self._results_cache = set()
+        # IOError is thrown when no results.txt is present.
+        # ValueError is thrown if the results.txt does not conform
+        # to the exepected three-column schema.
+        try:
+            with open('data/results.txt', 'r') as f:
+                for line in f:
+                    ts, status, url = line.strip().split(',')
+                    self._results_cache.add(url)
+        except (IOError, ValueError):
+            pass
+        super(WebDriver, self).__init__(*args, **kwargs)
+
+    def get(self, url, *args, **kwargs):
+        """
+        Raises a ResultCollectedError, which can be caught
+        and handled to skip URLs.
+        """
+        if url in self._results_cache:
+            raise ResultCollectedError()
+        super(WebDriver, self).get(url, *args, **kwargs)
+
+
 def start_selenium_server(timeout=10):
     """
     Starts a stand-alone Chrome Selenium server listening on
@@ -29,7 +63,7 @@ def start_selenium_server(timeout=10):
         if time.time() - start_time > timeout:
             raise IOError('Could not connect to Selenium server.')
 
-    driver = webdriver.Remote(
+    driver = WebDriver(
         command_executor='http://127.0.0.1:4444/wd/hub',
         desired_capabilities=DesiredCapabilities.CHROME
     )
@@ -89,6 +123,8 @@ def check_for_mixed_content(url):
         result = ('timeout', url)
         redis_client.publish(*result)
         return result
+    except ResultCollectedError:
+        return  # skipped (already seen)
 
     log = driver.get_log('browser')
     for msg in log:
