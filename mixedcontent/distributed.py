@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from celery import Celery
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
@@ -123,6 +123,10 @@ def check_for_mixed_content(url):
         result = ('timeout', url)
         redis_client.publish(*result)
         return result
+    except WebDriverException:
+        start_selenium_server()
+        check_for_mixed_content.delay(url)
+        return  # retry after starting chrome
     except ResultCollectedError:
         return  # skipped (already seen)
 
