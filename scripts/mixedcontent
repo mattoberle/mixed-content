@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
+from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from typing import List
+
+import mixedcontent.core as mc
+
+parser = ArgumentParser()
+parser.add_argument('domain')
+parser.add_argument('sitemap_url')
+parser.add_argument('--threads', type=int, default=1)
+
+
+def chunks(li: List[str], n: int):
+    for i in range(0, len(li), n):
+        yield li[i:i + n]
 
 
 if __name__ == '__main__':
-    from mixedcontent.distributed import (check_for_mixed_content,
-                                          parse_sitemap, report)
-    domains = set()
-    try:
-        with open('data/domains.cfg', 'r') as f:
-            for line in f:
-                domains.add(line.strip())
-    except IOError:
-        pass
+    args = parser.parse_args()
 
-    urls = set()
-    try:
-        with open('data/urls.cfg', 'r') as f:
-            for line in f:
-                urls.add(line.strip())
-    except IOError:
-        pass
+    urls = mc.parse_sitemap(args.domain, args.sitemap_url)
 
-    for domain in domains:
-        sitemap_url = 'https://{}/sitemap.xml'.format(domain)
-        parse_sitemap.delay(domain, sitemap_url)
-    for url in urls:
-        check_for_mixed_content.delay(url)
-    report()
+    if args.threads == 1:
+        driver = mc.start_selenium_server()
+        for url in urls:
+            mc.check_for_mixed_content(driver, url)
+    else:
+        funcs = (partial(mc.check_for_mixed_content, mc.start_selenium_server())
+                 for i in range(args.threads))
+        urls = list(chunks(list(urls), args.threads))
+        with ThreadPoolExecutor(max_workers=args.threads) as executor:
+            results = [executor.map(func, u) for func, u in zip(funcs, urls)]
+            for result in results:
+                for r in result:
+                    print(r)

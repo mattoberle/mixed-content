@@ -8,7 +8,7 @@ setup(
     description='Mixed-Content Crawler',
     install_requires=[
         'beautifulsoup4',
-        'celery[redis]',
+        'chromedriver-binary==75.0.3770.8.0',
         'lxml',
         'requests',
         'selenium',
