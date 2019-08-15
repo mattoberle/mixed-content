@@ -24,6 +24,9 @@ services:
     command: ['celery', '-A', 'mixedcontent.distributed', 'worker', '-l', 'ERROR', '-c', '1']
     depends_on:
       - broker
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     links:
       - broker
     volumes:

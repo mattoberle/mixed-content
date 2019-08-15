@@ -8,8 +8,7 @@ RUN apt-get -qqy update \
     python3 \
     python3-pip \
     python3-setuptools \
-  && rm -rf /var/lib/apt/lists/* /var/cache/apt/* \
-  && ln -s /usr/bin/python3 /usr/bin/python
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 WORKDIR /home/seluser
 COPY . ./
